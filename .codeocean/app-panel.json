@@ -1,0 +1,14 @@
+{
+	"version": 1,
+	"named_parameters": true,
+	"parameters": [
+		{
+			"id": "4IO9tcqLyGhQwJWc",
+			"name": "prompt",
+			"param_name": "prompt",
+			"type": "text",
+			"value_type": "string",
+			"default_value": "List available skills"
+		}
+	]
+}

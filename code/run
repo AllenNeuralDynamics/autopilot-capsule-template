@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 set -ex
 
-# This is the master script for the capsule. When you click "Reproducible Run", the code in this file will execute.
-python -u run_capsule.py "$@"
+export UV_CACHE_DIR=/root/capsule/scratch/.cache
+mkdir -p "${UV_CACHE_DIR}"
+
+copilot "$@"

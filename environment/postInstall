@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -e
+
+curl -fsSL https://gh.io/copilot-install | bash
+echo 'export PATH="$PATH:$HOME/local/bin"' >> ~/.bashrc
+source ~/.bashrc
