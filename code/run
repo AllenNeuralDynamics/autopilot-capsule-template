@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -ex
 
+echo $TERM
+
 export UV_CACHE_DIR=/root/capsule/scratch/.cache
 mkdir -p "${UV_CACHE_DIR}"
 
