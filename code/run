@@ -4,4 +4,6 @@ set -ex
 export UV_CACHE_DIR=/root/capsule/scratch/.cache
 mkdir -p "${UV_CACHE_DIR}"
 
-copilot "$@" --allow-all --no-ask-user --share=/root/capsule/results/copilot-session.md # --silent 
+export COPILOT_HOME=/root/capsule/.copilot
+copilot --version
+copilot "$@" --autopilot --yolo --share=/root/capsule/results/copilot-session.md  # --silent 

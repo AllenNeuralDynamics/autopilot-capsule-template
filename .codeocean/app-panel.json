@@ -9,16 +9,25 @@
 			"description": "Execute a prompt in non-interactive mode. The CLI runs the prompt and exits when done.",
 			"type": "text",
 			"value_type": "string",
-			"default_value": "List available skills"
+			"default_value": "List available skills",
+			"required": true
 		},
 		{
 			"id": "KV2fdFmGh8hUnfiu",
-			"name": "model",
+			"name": "model [optional]",
 			"param_name": "model",
-			"description": "Set the LLM model to use",
+			"description": "Set the LLM model to use. Default effort will be used (not currently configurable from CLI)",
 			"type": "text",
-			"value_type": "string",
-			"default_value": "claude-sonnet-4.6"
+			"value_type": "string"
+		},
+		{
+			"id": "BHZrmGaBQWAunuqp",
+			"name": "max-autopilot-continues [optional]",
+			"param_name": "max-autopilot-continues",
+			"description": "Set a maximum continuation limit to prevent runaway loops",
+			"help_text": "Set a maximum continuation limit to prevent runaway loops",
+			"type": "text",
+			"value_type": "integer"
 		}
 	]
 }
