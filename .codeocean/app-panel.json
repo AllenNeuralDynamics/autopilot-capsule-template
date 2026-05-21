@@ -6,9 +6,19 @@
 			"id": "4IO9tcqLyGhQwJWc",
 			"name": "prompt",
 			"param_name": "prompt",
+			"description": "Execute a prompt in non-interactive mode. The CLI runs the prompt and exits when done.",
 			"type": "text",
 			"value_type": "string",
 			"default_value": "List available skills"
+		},
+		{
+			"id": "KV2fdFmGh8hUnfiu",
+			"name": "model",
+			"param_name": "model",
+			"description": "Set the LLM model to use",
+			"type": "text",
+			"value_type": "string",
+			"default_value": "claude-sonnet-4.6"
 		}
 	]
 }
