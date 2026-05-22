@@ -1,9 +1,43 @@
 #!/usr/bin/env bash
-set -ex
+set -e
+
+apt-get update
+apt-get install tree
+# Save a directory tree for the /data folder (helps debug issues attaching data assets)
+tree -a -L 2 --dirsfirst / > /results/tree.txt
 
 export UV_CACHE_DIR=/root/capsule/scratch/.cache
 mkdir -p "${UV_CACHE_DIR}"
 
+# (set -ex; cd ..)
+mkdir -p /root/capsule/results
+
 export COPILOT_HOME=/root/capsule/.copilot
-copilot --version
-copilot "$@" --autopilot --yolo --share=/root/capsule/results/copilot-session.md  # --silent 
+
+# Check if the --update-copilot flag is present and set a variable accordingly
+update_copilot=false
+copilot_args=()
+for arg in "$@"; do
+  if [[ "${arg}" == "--update-copilot" || "${arg}" == --update-copilot=* ]]; then
+    update_copilot=true
+  else
+    copilot_args+=("${arg}")
+  fi
+done
+
+if [[ "${update_copilot}" == true ]]; then
+  (set -ex; copilot update)
+  else
+    (set -ex; copilot version)
+fi
+
+set -x
+cat /root/capsule/code/AGENTS.md
+pip install matplotlib -q
+
+# agents are extremely reluctant to work outside of their cwd
+ln -s /root/capsule/.agents /root/capsule/code/.agents
+ln -s /root/capsule/.copilot /root/capsule/code/.copilot
+ln -sfn /root/capsule/AGENTS.md /root/capsule/code/AGENTS.md
+
+cd /root/capsule && copilot "${copilot_args[@]}" --autopilot --yolo --add-dir=/root/capsule/results --share=/root/capsule/results/copilot-session.md  # --silent 

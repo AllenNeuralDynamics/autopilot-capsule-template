@@ -1,10 +1,24 @@
 ---
-name: edit-codeocean-capsule
-description: Use this skill when writing code for a Code Ocean capsule, or when running within a capsule environment (CO_COMPUTATION_ID exists).
-user-invocable: false
+name: codeocean-capsule
+description: "Always use when running within a Code Ocean capsule environment or reproducible run: check `env | grep -E "CO_COMPUTATION_ID"`. Also use this skill when writing any code for a Code Ocean capsule project - `.codeocean/` dir exists."
+user-invocable: true
 ---
 
-# Capsule editing for agents
+## Start here
+Identify which mode this environment is running in:
+```bash
+[ -z "${TERM+x}" ] || [ "$TERM" = "dumb" ] && echo reproducible-run || echo interactive
+```
+
+### reproducible-run
+- only write outputs for the user to `results` - anything else will be lost at exit
+
+### interactive (ignore if in reproducible-run)
+- a user is probably steering
+- editing `code` and `data` is allowed
+- `code/run` is the entry point for Reproducible Runs
+- the user may want to write to directories other than those listed below - just be aware of the 5 GB total capsule limit
+
 ## Paths
 
 | Purpose | Path | Storage |
@@ -14,22 +28,8 @@ user-invocable: false
 | code used during Reproducible Runs | `/root/capsule/code/` | 5 GB capsule limit applies |
 | read-only data assets, user uploads, artifacts | `/root/capsule/data/` | 5 GB capsule limit applies |
 
-## Capsule modes
-Identify which mode this environment is running in:
-```bash
-[ -z "${TERM+x}" ] || [ "$TERM" = "dumb" ] && echo reproducible-run || echo interactive
-```
-### reproducible-run
-- only outputs written to `results` will be captured at exit for the user to inspect
-
-### interactive (ignore if in reproducible-run)
-- a user is probably steering
-- editing `code` and `data` is allowed
-- `code/run` is the entry point for Reproducible Runs
-- the user may want to write to directories other than those listed above - just be aware of the 5 GB capsule limit
-
 ## Guidelines
-- create subdirectories within `results` to stay organized (e.g. `results/figures`).
+- create subdirectories within `results` to stay organized (e.g. `/root/capsule/results/figures`).
 - use absolute paths for clarity
 
 ## Gotchas
@@ -38,6 +38,12 @@ Identify which mode this environment is running in:
   NPROC="${CO_CPUS:-$(nproc)}"
   ```
 - linux capsules usually run as root by default; `sudo` may not be installed (or necessary)
+
+##Common mistakes
+- Writing results for the user to `code`, `output`, `tempfile`, `tmp` in a Reproducible Run — wrong, always use `/root/capsule/results/`
+- `~/results` — wrong, use absolute path
+- Saving large intermediate files to `/root/capsule/code/`, `tempfile` or `/tmp` — wrong, use `/root/capsule/scratch/` to avoid the capsule storage limit
+
 
 ## Code Patterns
 
