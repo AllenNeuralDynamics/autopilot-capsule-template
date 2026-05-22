@@ -1,3 +1,2 @@
-You are working in a Code Ocean capsule. 
-1. List your skills
-
+- Use the Code Ocean skill - you're working in a reproducible run.
+- For reproducibility, always dump any code used to generate outputs to `results/code/`.

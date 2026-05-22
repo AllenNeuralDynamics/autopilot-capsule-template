@@ -1,18 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-apt-get update
-apt-get install tree
-# Save a directory tree for the /data folder (helps debug issues attaching data assets)
-tree -a -L 2 --dirsfirst / > /results/tree.txt
-
 export UV_CACHE_DIR=/root/capsule/scratch/.cache
 mkdir -p "${UV_CACHE_DIR}"
-
-# (set -ex; cd ..)
-mkdir -p /root/capsule/results
-
-export COPILOT_HOME=/root/capsule/.copilot
 
 # Check if the --update-copilot flag is present and set a variable accordingly
 update_copilot=false
@@ -31,13 +21,17 @@ if [[ "${update_copilot}" == true ]]; then
     (set -ex; copilot version)
 fi
 
+# keep copies of copilot's config & logs - they're interesting
+cp -r /root/capsule/code/.agents /root/capsule/results/.copilot
+cp -r /root/capsule/code/.copilot /root/capsule/results
+cp /root/capsule/code/AGENTS.md /root/capsule/results/AGENTS.md
+export COPILOT_HOME="/root/capsule/results/.copilot"
+
+# ------------- set agent workspace dir --------------------
+# agents are reluctant to write outside of their cwd
+AGENT_DIR="${AGENT_DIR:-/root/capsule}"
+# ----------------------------------------------------------
+cp /root/capsule/code/AGENTS.md "$AGENT_DIR/AGENTS.md"
 set -x
-cat /root/capsule/code/AGENTS.md
-pip install matplotlib -q
-
-# agents are extremely reluctant to work outside of their cwd
-ln -s /root/capsule/.agents /root/capsule/code/.agents
-ln -s /root/capsule/.copilot /root/capsule/code/.copilot
-ln -sfn /root/capsule/AGENTS.md /root/capsule/code/AGENTS.md
-
-cd /root/capsule && copilot "${copilot_args[@]}" --autopilot --yolo --add-dir=/root/capsule/results --share=/root/capsule/results/copilot-session.md  # --silent 
+cd "$AGENT_DIR"
+copilot "${copilot_args[@]}" --autopilot --yolo --share=/root/capsule/results/copilot-session.md

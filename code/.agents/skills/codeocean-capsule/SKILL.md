@@ -1,35 +1,36 @@
 ---
 name: codeocean-capsule
-description: "Always use when running within a Code Ocean capsule environment or reproducible run: check `env | grep -E "CO_COMPUTATION_ID"`. Also use this skill when writing any code for a Code Ocean capsule project - `.codeocean/` dir exists."
-user-invocable: true
+description: Always use when running within a Code Ocean capsule environment or reproducible run - check `env | grep -E "CO_COMPUTATION_ID"`. Also use this skill when writing any code for a Code Ocean capsule project - `.codeocean/` dir exists.
+user-invocable: false
 ---
 
 ## Start here
-Identify which mode this environment is running in:
+If unclear, identify which mode this environment is running in `reproducible-run` or `interactive`:
 ```bash
 [ -z "${TERM+x}" ] || [ "$TERM" = "dumb" ] && echo reproducible-run || echo interactive
 ```
 
 ### reproducible-run
-- only write outputs for the user to `results` - anything else will be lost at exit
+- only write outputs for the user to `results` - anything else will be lost at exit.
+- for reproducibility, always dump code that generated outputs to `results/code`.
 
-### interactive (ignore if in reproducible-run)
-- a user is probably steering
-- editing `code` and `data` is allowed
-- `code/run` is the entry point for Reproducible Runs
-- the user may want to write to directories other than those listed below - just be aware of the 5 GB total capsule limit
+### interactive (ignore if in reproducible run)
+- a user is probably steering.
+- only in interactive mode editing `code` and `data` is allowed - never in a reproducible run.
+- `code/run` is the entry point for reproducible runs.
+- the user may want to write to directories other than those listed below - just be aware of the 5 GB total capsule limit.
 
 ## Paths
 
 | Purpose | Path | Storage |
 |---------|------|---------|
-| outputs of Reproducible Runs: figures, tables, reports, data, code | `/root/capsule/results/` | Unlimited |
-| large or temporary files, app caches, downloads, extracted archives | `/root/capsule/scratch/` | Unlimited |
-| code used during Reproducible Runs | `/root/capsule/code/` | 5 GB capsule limit applies |
-| read-only data assets, user uploads, artifacts | `/root/capsule/data/` | 5 GB capsule limit applies |
+| outputs of reproducible runs: figures, tables, reports, data, code | `results/` | Unlimited |
+| large or temporary files, app caches, downloads, extracted archives | `scratch/` | Unlimited |
+| code used during reproducible runs | `code/` | 5 GB capsule limit applies |
+| read-only data assets, user uploads, artifacts | `data/` | 5 GB capsule limit applies |
 
 ## Guidelines
-- create subdirectories within `results` to stay organized (e.g. `/root/capsule/results/figures`).
+- create subdirectories within `results` to stay organized (e.g. `figures/`, `code/`).
 - use absolute paths for clarity
 
 ## Gotchas
@@ -39,52 +40,10 @@ Identify which mode this environment is running in:
   ```
 - linux capsules usually run as root by default; `sudo` may not be installed (or necessary)
 
-##Common mistakes
-- Writing results for the user to `code`, `output`, `tempfile`, `tmp` in a Reproducible Run — wrong, always use `/root/capsule/results/`
-- `~/results` — wrong, use absolute path
-- Saving large intermediate files to `/root/capsule/code/`, `tempfile` or `/tmp` — wrong, use `/root/capsule/scratch/` to avoid the capsule storage limit
-
-
-## Code Patterns
-
-### Python
+## Python
 - if the `conda` base environment is available it is activated by default and should be used; otherwise, install and use `uv`:
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 export PATH="/root/.local/bin:$PATH"
 export UV_CACHE_DIR=/root/capsule/scratch/.cache
-```
-
-```python
-import os
-from pathlib import Path
-
-RESULTS_DIR = Path("/root/capsule/results")
-SCRATCH_DIR = Path("/root/capsule/scratch")
-
-## Save outputs
-fig.savefig(RESULTS_DIR / "figure1.png", dpi=300)
-df.to_csv(RESULTS_DIR / "summary.csv", index=False)
-
-## Scratch for intermediates
-cache_path = SCRATCH_DIR / "model_checkpoint.pt"
-```
-
-## R
-```r
-results_dir <- "/root/capsule/results"
-scratch_dir <- "/root/capsule/scratch"
-
-## Save outputs
-ggsave(file.path(results_dir, "figure1.png"), plot = p, width = 8, height = 6)
-write.csv(df, file.path(results_dir, "summary.csv"), row.names = FALSE)
-```
-
-## Bash (code/run)
-```
-#!/usr/bin/env bash
-set -ex
-
-## This is the master script for the capsule. When you click "Reproducible Run", the code in this file will execute.
-python -u run_capsule.py "$@"
 ```
