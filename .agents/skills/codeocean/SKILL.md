@@ -1,30 +1,50 @@
 ---
 name: codeocean
-description: Use this skill when the env var CO_CAPSULE_ID exists, indicating that we're running in a Code Ocean capsule or from within a reproducible run (CO_COMPUTATION_ID exists). Also use this skill when the user's prompt requires editing code in a Code Ocean capsule.
+description: Use this skill when writing code for a Code Ocean capsule, or when running within a capsule environment (CO_COMPUTATION_ID exists).
 user-invocable: false
 ---
 
-# Code Ocean 
+# Paths
 
-## Paths
+| Purpose | Path | Storage |
+|---------|------|---------|
+| outputs of Reproducible Runs: figures, tables, reports, data, code | `/root/capsule/results/` | Unlimited |
+| large or temporary files, app caches, downloads, extracted archives | `/root/capsule/scratch/` | Unlimited |
+| code used during Reproducible Runs | `/root/capsule/code/` | 5 GB capsule limit applies |
+| read-only data assets, user uploads, artifacts | `/root/capsule/data/` | 5 GB capsule limit applies |
 
-| Purpose | Path | Storage | Notes |
-|---------|------|---------|-------|
-| **Outputs** (figures, tables, reports, data) | `/root/capsule/results/` | Unlimited | This is what Code Ocean captures as a "result". The user can only see outputs that are saved here. |
-| **Scratch / temp artifacts** (large intermediate files, caches, downloads) | `/root/capsule/scratch/` | Unlimited | Cleared at capsule exit. Changes cannot be seen by user. |
-| **Source code** | `/root/capsule/code/` | 5 GB limit applies. Changes cannot be seen by user |
-| **Input data** (read-only) | `/root/capsule/data/` | |
+# Behavior
+## Non-interactive 
+- "$TERM" == dumb: this is a "reproducible run" triggered by `/root/capsule/code/run`
+- only outputs written to `results` will be captured at exit for the user to inspect
 
-## Rules
+## Interactive
+- "$TERM" != dumb: a user is most likely steering
+- editing `code` and `data` is allowed
+- `code/run` the entry point for Reproducible Runs
+- the user may want to write to directories other than those listed above - just be aware of the 5 GB capsule limit
 
-1. **Never write outputs to `/root/capsule/code/` or relative paths** — always use absolute `/root/capsule/results/` for anything that should be captured.
-2. **Use `/root/capsule/scratch/` for large intermediates**: model checkpoints during training, downloaded archives, extracted files, intermediate CSVs, cache dirs, temp images before compositing, etc.
-3. **Create subdirectories** within `results/` to stay organized (e.g. `results/figures/`).
-4. **Never hardcode the user's home directory** or assume a working directory — use the absolute paths above.
+# Guidelines
+- create subdirectories within `results` to stay organized (e.g. `results/figures`).
+- use absolute paths for clarity
 
-## Code Patterns
+# Gotchas
+- the CPUs reported by the system will usually be incorrect: the environment variable `CO_CPUS` gives the correct number, if it exists; otherwise, fallback to the system count:
+  ```bash
+  NPROC="${CO_CPUS:-$(nproc)}"
+  ```
+- linux capsules usually run as root by default; `sudo` may not be installed (or necessary)
 
-### Python
+# Code Patterns
+
+## Python
+- if the `conda` base environment is available it is activated by default and should be used; otherwise, install and use `uv`:
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+export PATH="/root/.local/bin:$PATH"
+export UV_CACHE_DIR=/root/capsule/scratch/.cache
+```
+
 ```python
 import os
 from pathlib import Path
@@ -40,7 +60,7 @@ df.to_csv(RESULTS_DIR / "summary.csv", index=False)
 cache_path = SCRATCH_DIR / "model_checkpoint.pt"
 ```
 
-### R
+# R
 ```r
 results_dir <- "/root/capsule/results"
 scratch_dir <- "/root/capsule/scratch"
@@ -50,24 +70,11 @@ ggsave(file.path(results_dir, "figure1.png"), plot = p, width = 8, height = 6)
 write.csv(df, file.path(results_dir, "summary.csv"), row.names = FALSE)
 ```
 
-### Bash (code/run)
-```bash
-#!/usr/bin/env bash
-set -euo pipefail
-
-# Run analysis
-python /root/capsule/code/analysis.py
+# Bash (code/run)
 ```
+#!/usr/bin/env bash
+set -ex
 
-## Common Mistakes to Avoid (Gotchas)
-
-- `./output/` or `output/` — wrong, use `/root/capsule/results/`
-- `~/results/` — wrong, use absolute path
-- Saving large intermediate files to `/root/capsule/code/` — use `/root/capsule/scratch/`
-- Writing to `/root/capsule/data/` — read-only
-- Using `tempfile` or `/tmp` for anything you want to inspect after a run — use `/root/capsule/scratch/` instead
-- the CPUs reported by the system will usually be incorrect: the environment variable `CO_CPUS` gives the correct number, if it exists; otherwise, fallback to the system count:
-  ```bash
-  NPROC="${CO_CPUS:-$(nproc)}"
-  ```
-- the Docker container runs as root by default; `sudo` is usually not installed (or neccessary)
+# This is the master script for the capsule. When you click "Reproducible Run", the code in this file will execute.
+python -u run_capsule.py "$@"
+```
