@@ -1,3 +1,3 @@
-# aind-capsule-template
+# autopilot-capsule
 
-Basic structure of a capsule to be customized as needed.
+Comparing autopilot mode, `--allow-all`, and `--no-ask-user`: https://docs.github.com/en/copilot/concepts/agents/copilot-cli/autopilot#comparing-autopilot-mode---allow-all-and---no-ask-user
