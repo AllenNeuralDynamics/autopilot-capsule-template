@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
-curl -fsSL https://gh.io/copilot-install | bash
-echo 'export PATH="$PATH:$HOME/local/bin"' >> ~/.bashrc
-source ~/.bashrc
+curl -fsSL https://chatgpt.com/codex/install.sh | sh
+
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+export PATH="$HOME/.local/bin:$PATH"
+
+codex --version

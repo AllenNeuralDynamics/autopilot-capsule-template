@@ -2,36 +2,86 @@
 set -e
 
 export UV_CACHE_DIR=/root/capsule/scratch/.cache
+export PATH="/root/.local/bin:${HOME:-/root}/.local/bin:$PATH"
 mkdir -p "${UV_CACHE_DIR}"
 
-# Check if the --update-copilot flag is present and set a variable accordingly
-update_copilot=false
-copilot_args=()
-for arg in "$@"; do
-  if [[ "${arg}" == "--update-copilot" || "${arg}" == --update-copilot=* ]]; then
-    update_copilot=true
-  else
-    copilot_args+=("${arg}")
-  fi
+prompt=""
+codex_args=()
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --update-codex)
+      if [[ $# -gt 1 && "$2" != --* ]]; then
+        update_value="$2"
+      else
+        update_value="1"
+      fi
+      if [[ "${update_value}" =~ ^(1|true|yes)$ ]]; then
+        codex update
+      fi
+      if [[ $# -gt 1 && "$2" != --* ]]; then
+        shift 2
+      else
+        shift
+      fi
+      continue
+      ;;
+    --update-codex=*)
+      [[ "${1#*=}" =~ ^(1|true|yes)$ ]] && codex update
+      ;;
+    --prompt)
+      if [[ $# -lt 2 ]]; then
+        echo "--prompt requires a value" >&2
+        exit 2
+      fi
+      prompt="$2"
+      shift 2
+      continue
+      ;;
+    --prompt=*)
+      prompt="${1#*=}"
+      ;;
+    *)
+      codex_args+=("$1")
+      ;;
+  esac
+  shift
 done
 
-if [[ "${update_copilot}" == true ]]; then
-  (set -ex; copilot update)
-  else
-    (set -ex; copilot version)
-fi
+(set -ex; codex --version)
 
-# keep copies of copilot's config & logs - they're interesting
-cp -r /root/capsule/code/.agents /root/capsule/results/.copilot
-cp -r /root/capsule/code/.copilot /root/capsule/results
-cp /root/capsule/code/AGENTS.md /root/capsule/results/AGENTS.md
-export COPILOT_HOME="/root/capsule/results/.copilot"
+if [[ -z "${prompt}" ]]; then
+  echo "No prompt supplied. Pass --prompt '...'" >&2
+  exit 2
+fi
 
 # ------------- set agent workspace dir --------------------
 # agents are reluctant to write outside of their cwd
 AGENT_DIR="${AGENT_DIR:-/root/capsule}"
 # ----------------------------------------------------------
+mkdir -p "$AGENT_DIR"
+
+# keep copies of Codex's config, skills, and final response
+export CODEX_HOME="/root/capsule/results/.agents"
+mkdir -p "$CODEX_HOME"
+cp -R /root/capsule/code/.agents/. "$CODEX_HOME/"
+cp /root/capsule/code/AGENTS.md /root/capsule/results/AGENTS.md
+
+if [[ -n "${OPENAI_API_KEY:-}" ]]; then
+  printenv OPENAI_API_KEY | codex login --with-api-key >/dev/null
+elif [[ -n "${CODEX_ACCESS_TOKEN:-}" ]]; then
+  printenv CODEX_ACCESS_TOKEN | codex login --with-access-token >/dev/null
+fi
+
 cp /root/capsule/code/AGENTS.md "$AGENT_DIR/AGENTS.md"
-set -x
+
 cd "$AGENT_DIR"
-copilot "${copilot_args[@]}" --autopilot --yolo --share=/root/capsule/results/copilot-session.md
+codex exec \
+  --dangerously-bypass-approvals-and-sandbox \
+  --skip-git-repo-check \
+  --color never \
+  --output-last-message /root/capsule/results/codex-last-message.md \
+  "${codex_args[@]}" \
+  "${prompt}" \
+  </dev/null \
+  2>&1 | tee /root/capsule/results/codex-session.log
