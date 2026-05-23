@@ -1,23 +1,28 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
 export UV_CACHE_DIR=/root/capsule/scratch/.cache
 export PATH="/root/.local/bin:${HOME:-/root}/.local/bin:$PATH"
 mkdir -p "${UV_CACHE_DIR}"
 
 prompt=""
-codex_args=()
+use_bedrock=false
+claude_args=()
+
+is_truthy() {
+  [[ "${1}" =~ ^(1|true|yes|on)$ ]]
+}
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --update-codex)
+    --update-claude)
       if [[ $# -gt 1 && "$2" != --* ]]; then
         update_value="$2"
       else
         update_value="1"
       fi
-      if [[ "${update_value}" =~ ^(1|true|yes)$ ]]; then
-        codex update
+      if is_truthy "${update_value}"; then
+        claude update
       fi
       if [[ $# -gt 1 && "$2" != --* ]]; then
         shift 2
@@ -26,8 +31,25 @@ while [[ $# -gt 0 ]]; do
       fi
       continue
       ;;
-    --update-codex=*)
-      [[ "${1#*=}" =~ ^(1|true|yes)$ ]] && codex update
+    --update-claude=*)
+      is_truthy "${1#*=}" && claude update
+      ;;
+    --use-bedrock)
+      if [[ $# -gt 1 && "$2" != --* ]]; then
+        bedrock_value="$2"
+      else
+        bedrock_value="1"
+      fi
+      is_truthy "${bedrock_value}" && use_bedrock=true
+      if [[ $# -gt 1 && "$2" != --* ]]; then
+        shift 2
+      else
+        shift
+      fi
+      continue
+      ;;
+    --use-bedrock=*)
+      is_truthy "${1#*=}" && use_bedrock=true
       ;;
     --prompt)
       if [[ $# -lt 2 ]]; then
@@ -42,13 +64,13 @@ while [[ $# -gt 0 ]]; do
       prompt="${1#*=}"
       ;;
     *)
-      codex_args+=("$1")
+      claude_args+=("$1")
       ;;
   esac
   shift
 done
 
-(set -ex; codex --version)
+(set -ex; claude --version)
 
 if [[ -z "${prompt}" ]]; then
   echo "No prompt supplied. Pass --prompt '...'" >&2
@@ -60,28 +82,25 @@ fi
 AGENT_DIR="${AGENT_DIR:-/root/capsule}"
 # ----------------------------------------------------------
 mkdir -p "$AGENT_DIR"
+mkdir -p /root/capsule/results
 
-# keep copies of Codex's config, skills, and final response
-export CODEX_HOME="/root/capsule/results/.agents"
-mkdir -p "$CODEX_HOME"
-cp -R /root/capsule/code/.agents/. "$CODEX_HOME/"
-cp /root/capsule/code/AGENTS.md /root/capsule/results/AGENTS.md
+# keep copies of Claude Code's config, skills, and run logs
+export CLAUDE_CONFIG_DIR="/root/capsule/results/.claude"
+mkdir -p "$CLAUDE_CONFIG_DIR"
+cp -R /root/capsule/code/.agents/. "$CLAUDE_CONFIG_DIR/"
+cp /root/capsule/code/CLAUDE.md /root/capsule/results/CLAUDE.md
 
-if [[ -n "${OPENAI_API_KEY:-}" ]]; then
-  printenv OPENAI_API_KEY | codex login --with-api-key >/dev/null
-elif [[ -n "${CODEX_ACCESS_TOKEN:-}" ]]; then
-  printenv CODEX_ACCESS_TOKEN | codex login --with-access-token >/dev/null
+if [[ "${use_bedrock}" == true ]]; then
+  export CLAUDE_CODE_USE_BEDROCK=1
 fi
 
-cp /root/capsule/code/AGENTS.md "$AGENT_DIR/AGENTS.md"
+cp /root/capsule/code/CLAUDE.md "$AGENT_DIR/CLAUDE.md"
 
 cd "$AGENT_DIR"
-codex exec \
-  --dangerously-bypass-approvals-and-sandbox \
-  --skip-git-repo-check \
-  --color never \
-  --output-last-message /root/capsule/results/codex-last-message.md \
-  "${codex_args[@]}" \
-  "${prompt}" \
+claude \
+  --dangerously-skip-permissions \
+  --debug-file /root/capsule/results/claude-code-debug.log \
+  "${claude_args[@]}" \
+  -p "${prompt}" \
   </dev/null \
-  2>&1 | tee /root/capsule/results/codex-session.log
+  2>&1 | tee /root/capsule/results/claude-code-session.log

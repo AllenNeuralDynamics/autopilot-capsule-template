@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-curl -fsSL https://chatgpt.com/codex/install.sh | sh
+curl -fsSL https://claude.ai/install.sh | bash
 
 echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
 export PATH="$HOME/.local/bin:$PATH"
 
-codex --version
+claude --version
