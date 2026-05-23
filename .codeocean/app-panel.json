@@ -22,6 +22,16 @@
 			"default_value": ""
 		},
 		{
+			"id": "gHn6HLjs9FmwKMxM",
+			"name": "effort [optional]",
+			"param_name": "effort",
+			"description": "Set Claude Code's effort level for this run. Supported values include low, medium, high, xhigh, and max. Empty means use the model default or config.",
+			"help_text": "Set Claude Code's effort level for this run. Supported values include low, medium, high, xhigh, and max. Empty means use the model default or config.",
+			"type": "text",
+			"value_type": "string",
+			"default_value": ""
+		},
+		{
 			"id": "BHZrmGaBQWAunuqp",
 			"name": "use-bedrock [optional]",
 			"param_name": "use-bedrock",

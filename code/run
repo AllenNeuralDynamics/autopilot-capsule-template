@@ -6,6 +6,8 @@ export PATH="/root/.local/bin:${HOME:-/root}/.local/bin:$PATH"
 mkdir -p "${UV_CACHE_DIR}"
 
 prompt=""
+model=""
+effort=""
 use_bedrock=false
 claude_args=()
 
@@ -51,6 +53,30 @@ while [[ $# -gt 0 ]]; do
     --use-bedrock=*)
       is_truthy "${1#*=}" && use_bedrock=true
       ;;
+    --model)
+      if [[ $# -gt 1 && "$2" != --* ]]; then
+        model="$2"
+        shift 2
+      else
+        shift
+      fi
+      continue
+      ;;
+    --model=*)
+      model="${1#*=}"
+      ;;
+    --effort)
+      if [[ $# -gt 1 && "$2" != --* ]]; then
+        effort="$2"
+        shift 2
+      else
+        shift
+      fi
+      continue
+      ;;
+    --effort=*)
+      effort="${1#*=}"
+      ;;
     --prompt)
       if [[ $# -lt 2 ]]; then
         echo "--prompt requires a value" >&2
@@ -69,6 +95,14 @@ while [[ $# -gt 0 ]]; do
   esac
   shift
 done
+
+if [[ -n "${model}" ]]; then
+  claude_args+=(--model "${model}")
+fi
+
+if [[ -n "${effort}" ]]; then
+  claude_args+=(--effort "${effort}")
+fi
 
 (set -ex; claude --version)
 
@@ -99,6 +133,8 @@ cp /root/capsule/code/CLAUDE.md "$AGENT_DIR/CLAUDE.md"
 cd "$AGENT_DIR"
 IS_SANDBOX=1 claude \
   --print \
+  --debug-file /root/capsule/results/.claude/claude-code-debug.log \
+  --include-hook-events \
   "${claude_args[@]}" \
   -p "${prompt}" \
   </dev/null \
