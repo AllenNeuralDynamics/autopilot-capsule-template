@@ -97,9 +97,8 @@ fi
 cp /root/capsule/code/CLAUDE.md "$AGENT_DIR/CLAUDE.md"
 
 cd "$AGENT_DIR"
-claude \
-  --dangerously-skip-permissions \
-  --debug-file /root/capsule/results/claude-code-debug.log \
+IS_SANDBOX=1 claude \
+  --print \
   "${claude_args[@]}" \
   -p "${prompt}" \
   </dev/null \
