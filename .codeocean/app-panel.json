@@ -32,6 +32,15 @@
 			"default_value": ""
 		},
 		{
+			"id": "Pm5ldfhN4m9JgQkA",
+			"name": "max-budget-usd [optional]",
+			"param_name": "max-budget-usd",
+			"description": "Set the maximum dollar amount Claude Code may spend on API calls before stopping. Leave unset for no budget limit.",
+			"help_text": "Set the maximum dollar amount Claude Code may spend on API calls before stopping. Leave unset for no budget limit.",
+			"type": "text",
+			"value_type": "string"
+		},
+		{
 			"id": "BHZrmGaBQWAunuqp",
 			"name": "use-bedrock [optional]",
 			"param_name": "use-bedrock",

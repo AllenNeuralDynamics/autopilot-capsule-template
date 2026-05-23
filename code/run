@@ -8,6 +8,7 @@ mkdir -p "${UV_CACHE_DIR}"
 prompt=""
 model=""
 effort=""
+max_budget_usd=""
 use_bedrock=false
 claude_args=()
 
@@ -77,6 +78,18 @@ while [[ $# -gt 0 ]]; do
     --effort=*)
       effort="${1#*=}"
       ;;
+    --max-budget-usd)
+      if [[ $# -gt 1 && "$2" != --* ]]; then
+        max_budget_usd="$2"
+        shift 2
+      else
+        shift
+      fi
+      continue
+      ;;
+    --max-budget-usd=*)
+      max_budget_usd="${1#*=}"
+      ;;
     --prompt)
       if [[ $# -lt 2 ]]; then
         echo "--prompt requires a value" >&2
@@ -102,6 +115,10 @@ fi
 
 if [[ -n "${effort}" ]]; then
   claude_args+=(--effort "${effort}")
+fi
+
+if [[ -n "${max_budget_usd}" ]]; then
+  claude_args+=(--max-budget-usd "${max_budget_usd}")
 fi
 
 (set -ex; claude --version)
