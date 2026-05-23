@@ -10,6 +10,7 @@ model=""
 effort=""
 max_budget_usd=""
 use_bedrock=false
+updated_claude=false
 claude_args=()
 
 is_truthy() {
@@ -26,6 +27,7 @@ while [[ $# -gt 0 ]]; do
       fi
       if is_truthy "${update_value}"; then
         claude update
+        updated_claude=true
       fi
       if [[ $# -gt 1 && "$2" != --* ]]; then
         shift 2
@@ -35,7 +37,10 @@ while [[ $# -gt 0 ]]; do
       continue
       ;;
     --update-claude=*)
-      is_truthy "${1#*=}" && claude update
+      if is_truthy "${1#*=}"; then
+        claude update
+        updated_claude=true
+      fi
       ;;
     --use-bedrock)
       if [[ $# -gt 1 && "$2" != --* ]]; then
@@ -121,7 +126,9 @@ if [[ -n "${max_budget_usd}" ]]; then
   claude_args+=(--max-budget-usd "${max_budget_usd}")
 fi
 
-(set -ex; claude --version)
+if [[ "${updated_claude}" != true ]]; then
+  (set -ex; claude --version)
+fi
 
 if [[ -z "${prompt}" ]]; then
   echo "No prompt supplied. Pass --prompt '...'" >&2
