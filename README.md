@@ -12,16 +12,10 @@ See Anthropic's Console [here](https://console.anthropic.com/settings/keys) to c
 To use Amazon Bedrock instead, set `use-bedrock` to `1` in the App Panel/API. The runner will export `CLAUDE_CODE_USE_BEDROCK=1`; configure AWS credentials and `AWS_REGION` separately in the capsule environment.
 
 ## Defaults for development
-The App Panel model, effort, and max-budget-usd fields are optional. Leave them blank to use the Claude Code defaults or config, or set them explicitly when you want repeatable model, reasoning-depth, and spend-limit selection for a run.
+The App Panel model, effort, and max-budget-usd fields are optional. Leaving them blank will use the Claude Code defaults.
 
-## Config
-The entrypoint is [code/run](code/run). It uses `results/.claude` as the run's `CLAUDE_CONFIG_DIR`, installs the bundled Code Ocean skill there, copies `CLAUDE.md` into the agent workspace, and launches:
-
-```bash
-claude --dangerously-skip-permissions -p
-```
-
-The dangerous skip-permissions flag is intended for this externally sandboxed Code Ocean environment. Do not reuse it on a normal workstation unless you understand the risk.
+## Notes
+`code/.agents` and `code/CLAUDE.md` are copied to `results/.claude` and used as the run's `CLAUDE_CONFIG_DIR`.
 
 A Code Ocean "skill" is bundled which *should* guide the agent on the conventions for working in a Reproducible Run (e.g. writing to `results/`).
 
