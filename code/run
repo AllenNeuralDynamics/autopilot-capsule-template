@@ -159,6 +159,7 @@ IS_SANDBOX=1 claude \
   --print \
   --debug-file /root/capsule/results/.claude/claude-code-debug.log \
   --include-hook-events \
+  --dangerously-skip-permissions \
   "${claude_args[@]}" \
   -p "${prompt}" \
   </dev/null \
