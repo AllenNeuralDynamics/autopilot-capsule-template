@@ -12,7 +12,9 @@ See Anthropic's Console [here](https://console.anthropic.com/settings/keys) to c
 To use Amazon Bedrock instead, set `use-bedrock` to `1` in the App Panel/API. The runner will export `CLAUDE_CODE_USE_BEDROCK=1`; configure AWS credentials and `AWS_REGION` separately in the capsule environment.
 
 ## Defaults for development
-The App Panel model, effort, and max-budget-usd fields are optional. Leaving them blank will use the Claude Code defaults.
+The App Panel model, effort, and max-budget-usd fields are optional. Leaving them blank will use Claude Code's defaults (or any config file it finds in `CLAUDE_CONFIG_DIR`).
+
+The capsule is set up for development first: it's easy to burn through tokens while just testing your data, utility functions, prompts, skills etc. so the default model is set to the cheap and cheerful `claude-haiku-4.5`. Just keep in mind that tool calling, context window size and basic ability to follow instructions and fix problems will be significantly worse than `opus` or `sonnet`. `claude-sonnet-4.6` is Copilot's default and is almost certainly the best bang for your buck if you want to launch many of these agents.
 
 ## Notes
 `code/.agents` and `code/CLAUDE.md` are copied to `results/.claude` and used as the run's `CLAUDE_CONFIG_DIR`.
