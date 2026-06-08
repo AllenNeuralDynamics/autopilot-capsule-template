@@ -19,7 +19,7 @@
 			"description": "Set the Claude model to use. Empty means use the Claude Code default or config.",
 			"type": "text",
 			"value_type": "string",
-			"default_value": ""
+			"default_value": "claude-haiku-4.5"
 		},
 		{
 			"id": "gHn6HLjs9FmwKMxM",
